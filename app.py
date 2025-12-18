@@ -44,8 +44,8 @@ st.markdown(
 # =========================
 @st.cache_resource
 def load_lstm_model():
-    file_id = "YOUR_FILE_ID_HERE"
-    url = f"https://drive.google.com/file/d/1AbCDeFGhIJKlmnOPqrSTuvWXyZ12345/view?usp=sharing"
+    file_id = "stockibm.h5"
+    url = "1fY6Zp1CqN5ZXScdxwGKt_Q1WAxjvQnWc"
 
 
     temp_model = tempfile.NamedTemporaryFile(delete=False, suffix=".h5")
