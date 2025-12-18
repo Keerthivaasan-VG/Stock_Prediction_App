@@ -40,20 +40,32 @@ st.markdown(
 )
 
 # =========================
-# LOAD MODEL (FIXED)
+# LOAD LSTM MODEL FROM GOOGLE DRIVE
 # =========================
 @st.cache_resource
 def load_lstm_model():
-    file_id = "stockibm.h5"
-    url = "1fY6Zp1CqN5ZXScdxwGKt_Q1WAxjvQnWc"
+    # 🔑 REPLACE WITH YOUR REAL GOOGLE DRIVE FILE ID
+    file_id = "1fY6Zp1CqN5ZXScdxwGKt_Q1WAxjvQnWc"
 
+    # ✅ CORRECT GOOGLE DRIVE URL
+    url = f"https://drive.google.com/file/d/{file_id}/view"
 
     temp_model = tempfile.NamedTemporaryFile(delete=False, suffix=".h5")
-    gdown.download(url, temp_model.name, quiet=True)
+
+    # ✅ FUZZY DOWNLOAD HANDLES DRIVE CONFIRMATION
+    gdown.download(
+        url,
+        temp_model.name,
+        quiet=False,
+        fuzzy=True
+    )
 
     model = load_model(temp_model.name, compile=False)
     return model
 
+# =========================
+# MODEL LOADING
+# =========================
 with st.spinner("🔄 Loading LSTM model..."):
     model = load_lstm_model()
 
@@ -67,7 +79,7 @@ uploaded_file = st.file_uploader(
     type=["csv"]
 )
 
-if uploaded_file:
+if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 
     if "Close" not in df.columns:
@@ -77,9 +89,12 @@ if uploaded_file:
     st.subheader("📄 Data Preview")
     st.dataframe(df.head())
 
+    # =========================
+    # DATA PREPROCESSING
+    # =========================
     close_prices = df["Close"].values.reshape(-1, 1)
 
-    scaler = MinMaxScaler()
+    scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(close_prices)
 
     sequence_length = 60
@@ -91,36 +106,39 @@ if uploaded_file:
     X = np.array(X)
     X = X.reshape(X.shape[0], X.shape[1], 1)
 
+    # =========================
+    # PREDICTION
+    # =========================
     predictions = model.predict(X)
     predictions = scaler.inverse_transform(predictions)
 
     actual = close_prices[sequence_length:]
 
     # =========================
-    # PLOT
+    # VISUALIZATION
     # =========================
-    st.subheader("📊 Actual vs Predicted Prices")
+    st.subheader("📊 Actual vs Predicted Stock Prices")
 
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(actual, label="Actual Price")
     ax.plot(predictions, label="Predicted Price")
-    ax.legend()
     ax.set_xlabel("Time")
     ax.set_ylabel("Price")
+    ax.legend()
 
     st.pyplot(fig)
 
     # =========================
     # NEXT DAY PREDICTION
     # =========================
-    last_seq = scaled_data[-sequence_length:]
-    last_seq = last_seq.reshape(1, sequence_length, 1)
+    last_sequence = scaled_data[-sequence_length:]
+    last_sequence = last_sequence.reshape(1, sequence_length, 1)
 
-    next_price = model.predict(last_seq)
-    next_price = scaler.inverse_transform(next_price)
+    next_day_price = model.predict(last_sequence)
+    next_day_price = scaler.inverse_transform(next_day_price)
 
     st.markdown("## 📌 Next Day Predicted Price")
-    st.success(f"₹ {next_price[0][0]:.2f}")
+    st.success(f"₹ {next_day_price[0][0]:.2f}")
 
 else:
     st.info("⬆️ Upload a CSV file to start prediction")
