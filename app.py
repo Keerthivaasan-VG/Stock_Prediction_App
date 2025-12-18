@@ -45,7 +45,8 @@ st.markdown(
 @st.cache_resource
 def load_lstm_model():
     file_id = "YOUR_FILE_ID_HERE"
-    url = f"https://drive.google.com/uc?id={file_id}"
+    url = f"https://drive.google.com/file/d/1AbCDeFGhIJKlmnOPqrSTuvWXyZ12345/view?usp=sharing"
+
 
     temp_model = tempfile.NamedTemporaryFile(delete=False, suffix=".h5")
     gdown.download(url, temp_model.name, quiet=True)
